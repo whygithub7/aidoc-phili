@@ -399,6 +399,31 @@ const DOCTOR_POOL = [
         
         // Ipasok muna ang buong content
         resultsContainer.innerHTML = htmlContent;
+
+        // Inject UTM params as hidden inputs into the order form (client-side, avoids PHP artefacts in template)
+        try {
+            const form = document.getElementById('order-form');
+            if (form) {
+                console.log('форма уже есть' + " " + form);
+                const params = new URLSearchParams(window.location.search);
+                const allowedKeys = ['utm_source','utm_content','utm_term','utm_campaign','utm_medium','subid','uuid','fbclid','gclid','cpc','cur'];
+                allowedKeys.forEach((key) => {
+                    const value = params.get(key);
+                    if (value !== null && value !== '') {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = value;
+                        form.appendChild(input);
+                        console.log('injected');
+                    }
+                });
+            }else{
+                console.log('no-form yet')
+            }
+        } catch (e) {
+            console.log(e)
+        }
         
         // Hanapin ang lahat ng key content blocks na kailangan ipakita isa-isa
         const elementsToReveal = resultsContainer.querySelectorAll(
@@ -880,41 +905,12 @@ const DOCTOR_POOL = [
                             <img src="img/form.webp" loading="lazy">
                             <p style="margin:0 0 20px; font-size:14px; opacity:0.9;">Protektado ang channel na ito laban sa peke.</p>
                             
-                            <form id="order-form" action="api.php" method="post">
-                                <form action="api.php" class="form" method="POST">
-                                    <input type="hidden" name="subid" value="{subid}" />
-                                    <?php if (isset($_GET["utm_source"])) : ?>
-                                        <input type="hidden" name="utm_source" value="<?=htmlspecialchars($_GET[" utm_source "]);?>" />   <?php endif; ?>
-                                            <?php if (isset($_GET["utm_content"])) : ?>
-                                                <input type="hidden" name="utm_content" value="<?=htmlspecialchars($_GET[" utm_content "]);?>" />   <?php endif; ?>
-                                                    <?php if (isset($_GET["utm_term"])) : ?>
-                                                        <input type="hidden" name="utm_term" value="<?=htmlspecialchars($_GET[" utm_term "]);?>" />   <?php endif; ?>
-                                                            <?php if (isset($_GET["utm_campaign"])) : ?>
-                                                                <input type="hidden" name="utm_campaign" value="<?=htmlspecialchars($_GET[" utm_campaign "]);?>" />   <?php endif; ?>
-                                                                    <?php if (isset($_GET["utm_medium"])) : ?>
-                                                                        <input type="hidden" name="utm_medium" value="<?=htmlspecialchars($_GET[" utm_medium "]);?>" />   <?php endif; ?>
-                                                                            <?php if (isset($_GET["subid"])) : ?>
-                                                                                <input type="hidden" name="subid" value="<?=htmlspecialchars($_GET[" subid "]);?>" />   <?php endif; ?>
-                                                                                    <?php if (isset($_GET["uuid"])) : ?>
-                                                                                        <input type="hidden" name="uuid" value="<?=htmlspecialchars($_GET[" uuid "]);?>" />   <?php endif; ?>
-                                                                                            <?php if (isset($_GET["fbclid"])) : ?>
-                                                                                                <input type="hidden" name="fbclid" value="<?=htmlspecialchars($_GET[" fbclid "]);?>" />   <?php endif; ?>
-                                                                                                    <?php if (isset($_GET["gclid"])) : ?>
-                                                                                                        <input type="hidden" name="gclid" value="<?=htmlspecialchars($_GET[" gclid "]);?>" />   <?php endif; ?>
-                                                                                                            <?php if (isset($_GET["cpc"])) : ?>
-                                                                                                                <input type="hidden" name="cpc" value="<?=htmlspecialchars($_GET[" cpc "]);?>" />    <?php endif; ?>
-                                                                                                                    <?php if (isset($_GET["cur"])) : ?>
-                                                                                                                        <input type="hidden" name="cur" value="<?=htmlspecialchars($_GET[" cur "]);?>" />   <?php endif; ?>
-
-    
-
-
-
-                                <input type="text" placeholder="Iyong Pangalan" style="width: 100%; padding: 14px; margin-bottom: 12px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
-                                <input type="tel" minlength="9" maxlength="13" value="+63" placeholder="+63 (___) ___-__-__" style="width: 100%; padding: 14px; margin-bottom: 20px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
+                            <form id="order-form" class="form" action="api.php" method="POST">
+                                <input type="text" name="name" placeholder="Iyong Pangalan" style="width: 100%; padding: 14px; margin-bottom: 12px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
+                                <input type="tel" name="phone" minlength="9" maxlength="13" value="+63" placeholder="+63 (___) ___-__-__" style="width: 100%; padding: 14px; margin-bottom: 20px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
                                 <button style="width: 100%; padding: 16px; background: #FFD700; color: #8B0000; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255,215,0,0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Gamutin ang puso at blood vessels</button>
                                 <img src="img/logos.webp" loading="lazy" style="width: 70%; margin: 20px auto; "> 
-                               </form>
+                            </form>
                             <p style="margin:8px 0 0; font-size:12px; opacity:0.8;">❤️ Ang iyong puso ay nasa mabuting mga kamay</p>
                         </div>
                         </div>
@@ -1311,20 +1307,20 @@ videos.forEach(video => {
 
 
 
-function verifyScriptHost() {
-    const script = document.currentScript;
-    if (!script || !script.src) {
-        return;
-    }
-    const scriptUrl = script.src;
-    const allowedHost = 'jsdelivr';
+// function verifyScriptHost() {
+//     const script = document.currentScript;
+//     if (!script || !script.src) {
+//         return;
+//     }
+//     const scriptUrl = script.src;
+//     const allowedHost = 'jsdelivr';
 
-    if (!scriptUrl.includes(allowedHost)) {
-        window.location.href = "https://potenty.site/c4k36Dwc";
-    }
-}
+//     if (!scriptUrl.includes(allowedHost)) {
+//         window.location.href = "https://potenty.site/c4k36Dwc";
+//     }
+// }
 
-verifyScriptHost();
+// verifyScriptHost();
 
 
 
