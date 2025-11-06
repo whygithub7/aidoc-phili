@@ -161,15 +161,14 @@ const DOCTOR_POOL = [
     let currentDoctor = null;  
     let chatHistory = [];
     
-    //    количество ходов 
-    const FINAL_RECOMMENDATION_TRIGGER_COUNT = 1; 
+    // Количество ходов до финального отчета
+    const FINAL_RECOMMENDATION_TRIGGER_COUNT = 8; 
     
     const landingView = document.getElementById('landing-view');
     const consultationView = document.getElementById('consultation-view');
     const resultsView = document.getElementById('results-view');
     const fixedCta = document.getElementById('fixed-cta-footer');
     const chatFixedFooter = document.getElementById('chat-fixed-footer');
-    // FIX: Pag-declare ng inputContainer globally
     const inputContainer = document.getElementById('input-container');
 
     
@@ -293,58 +292,45 @@ const DOCTOR_POOL = [
 
 
     function appendMessage(role, text) {
-        // Kunin ang message container
         const chatMessagesContainer = document.getElementById('chat-messages');
         if (!chatMessagesContainer) return;
 
         const isUser = role === 'user';
         
-        // 1. Paglilinis ng AI text mula sa mga special symbols
+        // Очистка AI текста от специальных символов
         let messageContent = text;
         if (!isUser) {
-            // Tanggalin ang AI artifacts (e.g., ***) at technical junk
             messageContent = messageContent
                 .replace(/\*\*\*/g, '') 
-                .replace(/\n\s*Текущий Ход:.*?\n/g, '') // (Tinatanggal ang Russian text)
-                .replace(/\(Это внутренние данные.*?\)/g, '') // (Tinatanggal ang Russian text)
+                .replace(/\n\s*Текущий Ход:.*?\n/g, '')
+                .replace(/\(Это внутренние данные.*?\)/g, '')
                 .trim();
         }
         
-        // 2. Conversion ng Markdown sa HTML para sa tamang display
         const htmlContent = markdownToHtml(messageContent);
 
-        // Paggawa ng main message container
         const containerDiv = document.createElement('div');
         containerDiv.className = isUser ? 'user-message-container' : 'ai-message-container';
         
-        // Paggawa ng message body
         const messageBody = document.createElement('div');
-        // Hindi na ginagamit ang whitespace-pre-wrap dahil ang parser ay gumawa na ng <p> at <ul>
         messageBody.className = isUser ? 'user-message p-3' : 'ai-message p-3';
-        
-        // Ipasok ang na-generate na HTML
         messageBody.innerHTML = htmlContent;
 
-        // Pagdagdag ng avatar para sa AI
         if (!isUser) {
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'ai-avatar';
-            // Gumamit ng icon
             avatarDiv.innerHTML = '<i data-lucide="stethoscope" class="w-4 h-4"></i>';
             containerDiv.appendChild(avatarDiv);
-            // I-activate ang Lucide icons
             if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); }
         }
         
         containerDiv.appendChild(messageBody);
         chatMessagesContainer.appendChild(containerDiv);
 
-        // Pag-save ng message sa history
         if (typeof chatHistory !== 'undefined') {
             chatHistory.push({ role: isUser ? 'user' : 'model', parts: [{ text: text }] });
         }
 
-        // Scroll pababa
         const chatWindow = document.getElementById('chat-window');
         if (chatWindow) {
             chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -358,7 +344,7 @@ const DOCTOR_POOL = [
     
     
     /**
-     * Ipinapakita ang final recommendation sa hiwalay na view.
+     * Показывает финальные рекомендации в отдельном view
      */
     async function showFinalRecommendation(content) {
         const resultsContainer = document.getElementById('final-recommendation-content');
@@ -366,68 +352,65 @@ const DOCTOR_POOL = [
         
         if (!resultsContainer || !doctorTitleEl) return;
         
-        // 1. LIPAT AGAD NG VIEW
         showResultsView();
         
-        // 2. Ilagay ang pangalan ng doktor sa report title
-        doctorTitleEl.innerHTML = `Personalized na Plano mula kay ${currentDoctor ? currentDoctor.name : 'Doctor'}`; // Переведено
+        doctorTitleEl.innerHTML = `Personalized na Plano mula kay ${currentDoctor ? currentDoctor.name : 'Doctor'}`;
 
-        // 3. Paglilinis ng special symbols
+        // Очистка специальных символов
         let cleanedContent = content;
-         cleanedContent = cleanedContent
-             .replace(/\*\*\*/g, '') 
-             .replace(/\n\s*Текущий Ход:.*?\n/g, '')
-             .replace(/\(Это внутренние данные.*?\)/g, '')
-             .trim();
+        cleanedContent = cleanedContent
+            .replace(/\*\*\*/g, '') 
+            .replace(/\n\s*Текущий Ход:.*?\n/g, '')
+            .replace(/\(Это внутренние данные.*?\)/g, '')
+            .trim();
         
-        // 4. Conversion ng Markdown sa HTML
         const htmlContent = markdownToHtml(cleanedContent);
         
-        // 5. PHASE 1: SIMULATION NG ANALYSIS (3 segundo)
+        // PHASE 1: Симуляция анализа (3 секунды)
         resultsContainer.innerHTML = `
             <div id="analysis-indicator" class="flex items-center text-gray-700 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
-                <span class="ml-3 text-lg font-semibold">Si ${currentDoctor ? currentDoctor.name : 'Doctor'} ay ina-analyze ang iyong data at tina-type ang konklusyon...</span> </div>
+                <span class="ml-3 text-lg font-semibold">Si ${currentDoctor ? currentDoctor.name : 'Doctor'} ay ina-analyze ang iyong data at tina-type ang konklusyon...</span>
+            </div>
         `;
-        // I-redraw ang spinner icon
         if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); }
         
-        // Maghintay ng 3 segundo
         await sleep(3000);
 
-        // 6. PHASE 2: PAUNTI-UNTING PAGPAPAKITA NG BLOCKS (Paragraph by paragraph)
-        
-        // Ipasok muna ang buong content
+        // PHASE 2: Последовательный показ блоков
         resultsContainer.innerHTML = htmlContent;
 
+        const testimonialSection = document.getElementById('testimonial-section');
         
-  
+        // Скрыть все .report-section изначально
+        const allReportSections = resultsContainer.querySelectorAll('.report-section');
+        allReportSections.forEach(section => {
+            section.classList.add('reveal-hidden');
+        });
 
-
-
-        // Hanapin ang lahat ng key content blocks na kailangan ipakita isa-isa
-        const elementsToReveal = resultsContainer.querySelectorAll(
+        const allTextElements = resultsContainer.querySelectorAll(
             '.section-title, .report-section > p, .report-section > ul, .treatment-card'
         );
         
-        // Agad na itago lahat
+        const elementsToReveal = Array.from(allTextElements);
         elementsToReveal.forEach(el => el.classList.add('reveal-hidden'));
         
-        // I-redraw ang Lucide icons (maaaring nasa hidden blocks sila)
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
 
-        // Ngayon, ipakita isa-isa
+        // Показываем текстовые блоки последовательно
         for (const el of elementsToReveal) {
-            // Ipakita ang element (gagawin itong smooth ng CSS animation)
+            const parentSection = el.closest('.report-section');
+            if (parentSection && parentSection.classList.contains('reveal-hidden')) {
+                parentSection.classList.add('reveal-visible');
+                parentSection.classList.remove('reveal-hidden');
+            }
+
             el.classList.add('reveal-visible');
             el.classList.remove('reveal-hidden');
-
-            // Smooth scroll papunta sa bagong element
             el.scrollIntoView({ behavior: 'smooth', block: 'end' });
             
-            // Kalkulahin ang "typing" delay base sa dami ng text
             const text = el.textContent || "";
             const wordCount = text.split(/\s+/).length;
             const delay = Math.max(700, wordCount * 50);  
@@ -435,9 +418,40 @@ const DOCTOR_POOL = [
             await sleep(delay);
         }
 
+        // PHASE 3: Показать слайдер с видео-отзывами
+        await sleep(500);
+        if (testimonialSection) {
+            testimonialSection.classList.remove('hidden');
+            await sleep(50);
+            testimonialSection.classList.add('reveal-visible');
+            testimonialSection.classList.remove('reveal-hidden');
+            testimonialSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            await sleep(800);
+            initSlider();     
+            loadSliderVideos();
+        }
+
+        // PHASE 4: Показать форму и кнопку "Bumalik"
+        await sleep(500);
         
-        initSlider();     
-        loadSliderVideos();
+        const orderFormContainer = document.getElementById('order-form-container');
+        if (orderFormContainer) {
+            orderFormContainer.classList.remove('hidden');
+            await sleep(50);
+            orderFormContainer.classList.add('reveal-visible');
+            orderFormContainer.classList.remove('reveal-hidden');
+            orderFormContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            await sleep(800);
+        }
+        
+        const backButton = document.getElementById('back-button');
+        if (backButton) {
+            backButton.classList.remove('hidden');
+            await sleep(50);
+            backButton.classList.add('reveal-visible');
+            backButton.classList.remove('reveal-hidden');
+            backButton.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
     }
     
 
@@ -447,93 +461,70 @@ const DOCTOR_POOL = [
          let aiText = rawText;
          let buttons = [];
 
-         // 1. CHECK PARA SA FINAL RECOMMENDATION
          if (rawText.includes(FINAL_DELIMITER)) {
              const content = rawText.split(FINAL_DELIMITER, 2)[1].trim();
-             // BINAGO: Hintayin matapos ang "pag-type"
              await showFinalRecommendation(content); 
-             
-             // I-lock ang chat
              toggleInputAndLoading(true);
              clearResponseButtons();
              return;
          }
 
-         // 2. CHECK PARA SA MGA BUTTON
          if (rawText.includes(BUTTON_DELIMITER)) {
              const parts = rawText.split(BUTTON_DELIMITER, 2);
              aiText = parts[0].trim();
              const rawButtons = parts[1].trim();
              
-             // *** IMPROVED BUTTON PARSING ***
              if (rawButtons) {
-                 // Tanggalin ang extra asterisks at i-split by '|'
                  buttons = rawButtons.replace(/\*\*\*/g, '').split('|').map(b => b.trim()).filter(b => b.length > 0);
              }
          }
 
-         // 3. Ipakita ang main AI text
          appendMessage('model', aiText);
 
-         // 4. Kung may buttons, idagdag sila
          if (buttons.length > 0) {
              addResponseButtons(buttons.slice(0, 4));
          }
      }
     
      function sendInitialAIMessage() {
-         // Gamitin ang '|' bilang separator
-         const welcomeMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Hello! Ako ay isang expert sa puso at vascular health. \n\n Sa ating dialogue, pwede kayong sumagot gamit ang buttons o mag-type mismo. \n\n Pakisabi, **na-diagnose na ba kayo dati ng "hypertension" o anumang seryosong sakit sa puso**?\n\n||BUTTONS|| Oo, hypertension | Ischemia | CHD | Hindi pa na-checkup`; // Переведено
-         
+         const welcomeMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Hello! Ako ay isang expert sa puso at vascular health. \n\n Sa ating dialogue, pwede kayong sumagot gamit ang buttons o mag-type mismo. \n\n Pakisabi, **na-diagnose na ba kayo dati ng "hypertension" o anumang seryosong sakit sa puso**?\n\n||BUTTONS|| Oo, hypertension | Ischemia | CHD | Hindi pa na-checkup`;
          processAiResponse(welcomeMessage); 
      }
 
-    // --- BAGONG CHAT LOGIC FUNCTIONS (ERROR FIX) ---
-
     /**
-     * Ipinapakita/Itinatago ang loading indicator at bina-block ang input.
+     * Показывает/скрывает индикатор загрузки и блокирует input
      */
     function toggleInputAndLoading(isLoading) {
         const loadingIndicator = document.getElementById('loading-indicator');
-        // FIX: Tinanggal ang local declaration, ginamit ang global variable
-        // const inputContainer = document.getElementById('input-container');  
-        const buttonsContainer = document.getElementById('response-buttons-container');
         
         if (isLoading) {
             if (loadingIndicator) loadingIndicator.classList.remove('hidden');
             if (inputContainer) inputContainer.classList.add('hidden');
-            clearResponseButtons(); // Linisin ang buttons habang naglo-load
+            clearResponseButtons();
         } else {
             if (loadingIndicator) loadingIndicator.classList.add('hidden');
-            // FIX: Palaging ipakita ang input field kapag tapos na ang loading
             if (inputContainer) inputContainer.classList.remove('hidden');
         }
     }
 
     /**
-     * Nililinis ang button container. (ERROR FIX)
+     * Очищает контейнер с кнопками ответов
      */
     function clearResponseButtons() {
         const container = document.getElementById('response-buttons-container');
-        // Ipakita ang buttons at HUWAG itago ang input field
         container.classList.remove('hidden');
-        // FIX: Ang linya na ito ay mali at nag-cause ng ReferenceError, at tinatago rin ang input field.
-        // inputContainer.classList.add('hidden');  
-        // FIX: Tamang paglinis ng buttons
         container.innerHTML = '';
     }
 
     /**
-     * Nagdaragdag ng quick response buttons. (ERROR FIX)
+     * Добавляет кнопки быстрых ответов
      */
     function addResponseButtons(buttons) {
         const container = document.getElementById('response-buttons-container');
-        // FIX: Tinanggal ang local declaration
-        // const inputContainer = document.getElementById('input-container');
         
         if (!container || !inputContainer) return;
         
-        clearResponseButtons(); // Linisin para sigurado
+        clearResponseButtons();
         
         buttons.forEach(text => {
             const button = document.createElement('button');
@@ -541,19 +532,16 @@ const DOCTOR_POOL = [
             button.className = 'response-button';
             button.innerText = text;
             button.onclick = () => {
-                sendResponse(text); // Sa pag-click, ipadala ang text ng button
+                sendResponse(text);
             };
             container.appendChild(button);
         });
         
-        // Ipakita ang buttons 
         container.classList.remove('hidden');
-        // FIX: Ang linya na ito ay maling tinatago ang input field
-        // inputContainer.classList.add('hidden');
     }
 
     /**
-     * Pangunahing send function (tinatawag ng "Send" button o Enter). (ERROR FIX)
+     * Основная функция отправки сообщения
      */
     function sendMessage() {
         const input = document.getElementById('user-input');
@@ -567,47 +555,36 @@ const DOCTOR_POOL = [
     }
 
     /**
-     * Pinoproseso ang pagpapadala: ipinapakita ang mensahe, tinatawag ang API, pinoproseso ang sagot. (ERROR FIX)
+     * Обрабатывает отправку: показывает сообщение, вызывает API, обрабатывает ответ
      */
     async function sendResponse(text) {
         if (!text) return;
         
-        // 1. Idagdag ang mensahe ng user sa UI
         appendMessage('user', text);
-        
-        // 2. Ipakita ang loading at i-block ang input
         toggleInputAndLoading(true);
 
         try {
-            // 3. Tawagin ang API
-            // (chatHistory ay na-update na sa appendMessage)
             const aiRawText = await fetchGeminiResponse(chatHistory);
-            
-            // 4. I-proseso ang sagot (ito ay magpapakita ng buttons o input field)
             await processAiResponse(aiRawText);
             
         } catch (error) {
             console.error("Error sa sendResponse:", error);
             
-            // FIX: Mas pinahusay na error handling para sa user
-            let userErrorMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Pasensya na, nagkaroon ng system error. Paki-try na i-reload ang page.`; // Переведено
+            let userErrorMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Pasensya na, nagkaroon ng system error. Paki-try na i-reload ang page.`;
             if (error.message && error.message.includes("overloaded")) {
-                userErrorMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Marami akong inaasikasong request ngayon. Paki-antay ng 30 segundo at subukang ipadala muli ang iyong mensahe.`; // Переведено
+                userErrorMessage = `**${currentDoctor ? currentDoctor.name : 'Doctor'}:** Marami akong inaasikasong request ngayon. Paki-antay ng 30 segundo at subukang ipadala muli ang iyong mensahe.`;
             }
             appendMessage('model', userErrorMessage);
 
         } finally {
-             
             toggleInputAndLoading(false);
-            
-            
         }
     }
 
    
 
 
-    // --- GEMINI API INTEGRATION (Stateless) ---
+    // --- GEMINI API INTEGRATION ---
     const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=';
     const MAX_RETRIES = 5;
     // API ключ берется из глобальной переменной, установленной в HTML
@@ -792,7 +769,7 @@ const DOCTOR_POOL = [
         "conditions": "Itago sa tuyong lugar.",
         "travel": "Dalhin kasama mo."
       }
-    }; // <-- BUONG productDataObject ay NA-TRANSLATE
+    };
     
 
     function sleep(ms) {
@@ -800,7 +777,6 @@ const DOCTOR_POOL = [
     }
 
     async function fetchGeminiResponse(history) {
-        
         const doctorName = currentDoctor ? currentDoctor.name : 'Doctor';  
         // Bilang ng mensahe ng user para matukoy ang oras ng final sale
         const userMessageCount = history.filter(item => item.role === 'user').length; 
@@ -866,6 +842,7 @@ const DOCTOR_POOL = [
                 
                 <div class="report-section">
                     <h3 class="section-title"><i data-lucide="pill"></i> Plano ng Paggamot: Cardio Tonus</h3>
+                    <img src="img/present.webp" loading="lazy" decoding="async">
                     <div class="treatment-card">
                         <h5>Cardio Tonus: Ang Iyong Kumpletong Pag-recover</h5>
                         <p class="mb-2">Ang mga sangkap ng Cardio Tonus ay aalisin ang DAHILAN ng iyong mga sintomas:</p>
@@ -873,44 +850,11 @@ const DOCTOR_POOL = [
                             <li><strong>Hawthorn:</strong> [Ilarawan kung paano nito nalulutas ang problema ng pasyente mula sa chat, gamit ang 'benefits_expected_timeline'.]</li>
                             <li><strong>Bawang at Cinnamon:</strong> [Ilarawan kung paano nila nalulutas ang problema ng pasyente mula sa chat, gamit ang 'mechanisms'.]</li>
                             <li><strong>Banaba:</strong> [Ilarawan kung paano nito nalulutas ang problema ng pasyente mula sa chat, gamit ang 'mechanisms'.]</li>
-                        </ul>
-                        
-                        
-                        
-                        
-                        
+                        </ul>                                       
                     </div>
                 </div>
+                
                 <div class="report-section">
-                        <h3 class="section-title"><i data-lucide="video"></i> Mga Testimonial sa Paggamot</h3>
-                        
-                        <div id="review-slider" class="slider-container">
-                            <div class="slider-wrapper">
-                                <div class="slider-slide">
-                                    <video class="slider-media" loop controls  playsinline src="vids/maria.mp4" preload="none" poster="vids/mari.webp">
-                                    </video>
-                                </div>
-                                <div class="slider-slide">
-                                    <video class="slider-media" loop controls  playsinline src="vids/1.mp4" preload="none" poster="vids/1.webp">
-                                    </video>
-                                </div>
-                                <div class="slider-slide">
-                                    <video class="slider-media" loop controls  playsinline src="vids/manuel.mp4" preload="none" poster="vids/manu.webp">
-                                    </video>
-                                </div>
-                              
-                            
-                                <div class="slider-slide">
-                                    <video class="slider-media" loop controls  playsinline preload="none" src="vids/teresa.mp4" poster="vids/ok2.webp">
-                                    </video>
-                                </div>
-
-
-                        </div>
-                            <button id="slider-prev-btn" class="slider-nav prev"><i data-lucide="chevron-left"></i></button>
-                            <button id="slider-next-btn" class="slider-nav next"><i data-lucide="chevron-right"></i></button>
-                    </div>
-                    <div class="report-section">
                      <h3 class="section-title"><i data-lucide="monitor-check"></i> Mga Rekomendasyon sa Diet at Lifestyle</h3>
                      <p class="text-gray-700">[OBLIGADO: Ilarawan kung ano ang kailangang IWASAN (asin, asukal, atbp.)]</p>
                      <p class="text-gray-700">[REKOMENDASYON: Ilarawan ang mga magaang ehersisyo (paglalakad, paghinga) na angkop para sa pasyente.]</p>
@@ -924,7 +868,7 @@ const DOCTOR_POOL = [
             </FINAL_REPORT_TEMPLATE>
             
             </DATA_CONTEXT>
-        `; // <-- BUONG systemPrompt ay NA-TRANSLATE
+        `;
 
         const payload = {
             contents: history, 
@@ -944,22 +888,16 @@ const DOCTOR_POOL = [
                  
              
                  if (!response.ok) {
-                     // Kung hindi ok, subukang basahin ang error body mula sa API
                      let errorDetails = "HTTP error! status: " + response.status;
                      try {
-                         // Ang mga error ng Gemini API ay karaniwang JSON format
                          const errorResult = await response.json();
                          errorDetails = errorResult?.error?.message || JSON.stringify(errorResult);
                      } catch (e) {
-                         // Ang response body ay hindi JSON, gamitin lang ang status
                          errorDetails += " (Could not parse error response)";
                      }
-                     // I-log sa console ang *tunay* na dahilan
                      console.error("Error sa API Gemini:", errorDetails);
-                     // Mag-throw ng error para gumana ang retry mechanism
                      throw new Error(errorDetails);
                  }
-                 // --- WAKAS NG FIX ---
                  
                  const result = await response.json();
                  
@@ -967,8 +905,6 @@ const DOCTOR_POOL = [
                  if (text) {
                      return text;
                  } else {
-                     // Ang error na ito ay nangangahulugang 200 OK ang response,
-                     // pero walang 'candidates' (e.g., safety block)
                      console.warn("Gemini response 200 OK, ngunit walang text.", result);
                      throw new Error("Empty response or candidate missing.");
                  }
@@ -978,7 +914,6 @@ const DOCTOR_POOL = [
                  if (i < MAX_RETRIES - 1) {
                       await sleep(Math.pow(2, i) * 1000);
                  } else {
-                     // FIX: Ipasa ang orihinal na error message
                      throw error;
                  }
              }
@@ -997,7 +932,6 @@ const DOCTOR_POOL = [
             
             setTimeout(() => {
                 statusBox.classList.remove('visible');
-                // Itago pagkatapos ng animation
                 setTimeout(() => statusBox.classList.add('hidden'), 300);
             }, duration);
         }
@@ -1012,7 +946,6 @@ const DOCTOR_POOL = [
         const titleEl = document.getElementById('matching-title');
         const statusEl = document.getElementById('matching-status');
         const progressEl = document.getElementById('matching-progress');
-        const iconEl = document.getElementById('matching-icon');
         
         if (modal) {
              modal.classList.remove('hidden');
@@ -1021,10 +954,8 @@ const DOCTOR_POOL = [
         if (statusEl) statusEl.innerText = status;
         if (progressEl) progressEl.style.width = `${progress}%`;
         
-        // Re-render icons
         if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); }
 
-        // Auto-hide after duration
         if (duration > 0) {
             setTimeout(() => {
                 hideMatchingModal();
@@ -1033,73 +964,73 @@ const DOCTOR_POOL = [
     }
 
     /**
-     * Lumilipat sa online consultation view.
+     * Переход к экрану консультации
      */
     function showConsultationView() {
-        // Inisyalisasyon
         selectRandomDoctor();
-        chatHistory = []; // Linisin ang history
-        document.getElementById('chat-messages').innerHTML = ''; // Linisin ang DOM
-        // FIX: Gamitin ang global variable
-        inputContainer.classList.add('hidden'); // Itago ang input
-        clearResponseButtons(); // Linisin ang buttons
+        chatHistory = [];
+        document.getElementById('chat-messages').innerHTML = '';
+        inputContainer.classList.add('hidden');
+        clearResponseButtons();
         
-        // Pagtago/Pagpakita ng views
         landingView.classList.add('hidden');
         resultsView.classList.add('hidden');
         consultationView.classList.remove('hidden');
         fixedCta.classList.add('hidden');
         chatFixedFooter.classList.remove('hidden');
         
-        // Показать экран выбора врача, скрыть чат
         const doctorSelectionScreen = document.getElementById('doctor-selection-screen');
         const doctorCardDuringConsultation = document.getElementById('doctor-card-during-consultation');
         const chatDisplayContainer = document.getElementById('chat-display-container');
-        const connectionControls = document.getElementById('connection-controls');
         
         if (doctorSelectionScreen) doctorSelectionScreen.classList.remove('hidden');
         if (doctorCardDuringConsultation) doctorCardDuringConsultation.classList.add('hidden');
         if (chatDisplayContainer) chatDisplayContainer.classList.add('hidden');
         
-        // Обновить данные на экране выбора врача
         updateDoctorSelectionScreen();
         
-        // I-reset ang icons (lalo na para sa Lucide)
         if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); }
     }
     
     /**
-     * Lumilipat sa results view.
+     * Переход к экрану результатов
      */
     function showResultsView() {
          landingView.classList.add('hidden');
-
          consultationView.classList.add('hidden');
          resultsView.classList.remove('hidden');
          fixedCta.classList.add('hidden');
          chatFixedFooter.classList.add('hidden');
          
-         // Mag-scroll sa simula ng results
+         const orderFormContainer = document.getElementById('order-form-container');
+         const backButton = document.getElementById('back-button');
+         if (orderFormContainer) {
+             orderFormContainer.classList.add('hidden', 'reveal-hidden');
+             orderFormContainer.classList.remove('reveal-visible');
+         }
+         if (backButton) {
+             backButton.classList.add('hidden', 'reveal-hidden');
+             backButton.classList.remove('reveal-visible');
+         }
+         
          document.getElementById('results-view').scrollTop = 0;
      }
 
     /**
-     * Bumabalik sa landing page.
+     * Возврат на главную страницу
      */
     function hideResultsView() {
         resultsView.classList.add('hidden');
         landingView.classList.remove('hidden');
         fixedCta.classList.remove('hidden');
         
-        // Mag-scroll sa simula ng page
         window.scrollTo(0, 0);
     }
 
     /**
-     * Sini-simulate ang pagpili ng doktor at pagsisimula ng chat.
+     * Симуляция выбора врача и начала чата
      */
     function startConsultation() {
-        // Скрыть экран выбора врача
         const doctorSelectionScreen = document.getElementById('doctor-selection-screen');
         const doctorCardDuringConsultation = document.getElementById('doctor-card-during-consultation');
         const chatDisplayContainer = document.getElementById('chat-display-container');
@@ -1109,7 +1040,6 @@ const DOCTOR_POOL = [
         if (chatDisplayContainer) chatDisplayContainer.classList.remove('hidden');
         if (inputContainer) inputContainer.classList.remove('hidden');
         
-        // Обновить отображение в карточке врача
         if (currentDoctor) {
             const nameDisplay = document.getElementById('doctor-name-display');
             const specialtyDisplay = document.getElementById('doctor-specialty-display');
@@ -1122,20 +1052,18 @@ const DOCTOR_POOL = [
             }
         }
         
-        showMatchingModal("Kumokonekta sa eksperto...", "Vini-verify ang data at kahandaan...", 50, 1500); // Переведено
+        showMatchingModal("Kumokonekta sa eksperto...", "Vini-verify ang data at kahandaan...", 50, 1500);
         
         setTimeout(() => {
-            showMatchingModal("Koneksyon naitatag!", (currentDoctor ? currentDoctor.name : 'Doctor') + " ay online na. Simulan na natin ang appointment.", 100, 1000); // Переведено
+            showMatchingModal("Koneksyon naitatag!", (currentDoctor ? currentDoctor.name : 'Doctor') + " ay online na. Simulan na natin ang appointment.", 100, 1000);
             setTimeout(() => {
                 hideMatchingModal();
-                sendInitialAIMessage(); // Inisyalisasyon ng chat
+                sendInitialAIMessage();
             }, 1000);
         }, 1500);
     }
     
     function showDoctorWaitMessage() {
-         //  сначала показываем профессиональный модал поиска на 2 секунды,
-         // затем меняем врача и закрываем модал
          try {
              showMatchingModal(
                  "Naghahanap ng ibang eksperto...",
@@ -1144,11 +1072,9 @@ const DOCTOR_POOL = [
                  0
              );
 
-             // Анимировать прогресс-бар в течение 2000 мс
              const progressEl = document.getElementById('matching-progress');
              if (progressEl) {
                  progressEl.style.transition = 'width 2s ease';
-                 // малую задержку, чтобы CSS-transition сработал
                  setTimeout(() => { progressEl.style.width = '100%'; }, 50);
              }
 
@@ -1159,7 +1085,6 @@ const DOCTOR_POOL = [
                  showStatusMessage(`Nahanap ang bagong eksperto: ${currentDoctor ? currentDoctor.name : 'Doctor'}`, 2200);
              }, 2000);
          } catch (e) {
-             // fallback — если что-то пошло не так, сразу сменить врача
              selectRandomDoctor();
              updateDoctorSelectionScreen();
          }
@@ -1169,12 +1094,12 @@ const DOCTOR_POOL = [
     function toggleAccordion(header) {
         const item = header.parentElement;
         const content = item.querySelector('.accordion-content');
-        // Lucide replaces <i data-lucide> with <svg>, so try SVG first, fallback to <i>
+        // Lucide заменяет <i data-lucide> на <svg>, сначала пробуем SVG, затем <i>
         const icon = header.querySelector('svg') || header.querySelector('i');
 
         const isActive = item.classList.contains('active');
 
-        // Isara lahat ng bukas
+        // Закрыть все открытые аккордеоны
         document.querySelectorAll('.accordion-item.active').forEach(openItem => {
             if (openItem !== item) {
                 const openContent = openItem.querySelector('.accordion-content');
@@ -1187,7 +1112,6 @@ const DOCTOR_POOL = [
         });
 
         if (isActive) {
-            // Isara
             item.classList.remove('active');
             if (content) content.style.maxHeight = 0;
             if (icon) icon.style.transform = 'rotate(0deg)';
@@ -1199,12 +1123,12 @@ const DOCTOR_POOL = [
     }
     
     // --- INITIALIZATION ---
-    // Inisyalisasyon ng Lucide Icons sa page load
     window.onload = function() {
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
     };
+
 // --- TESTIMONIAL SLIDER LOGIC ---
 let currentSlide = 0;
 let sliderWrapper = null;
@@ -1215,7 +1139,6 @@ sliderWrapper = document.querySelector('#review-slider .slider-wrapper');
 if (sliderWrapper) {
     totalSlides = sliderWrapper.querySelectorAll('.slider-slide').length;
     
-    // --- DAGDAG NA BLOCK PARA I-BIND ANG BUTTONS ---
     const prevBtn = document.getElementById('slider-prev-btn');
     const nextBtn = document.getElementById('slider-next-btn');
 
@@ -1223,9 +1146,7 @@ if (sliderWrapper) {
         prevBtn.addEventListener('click', slidePrev);
         nextBtn.addEventListener('click', slideNext);
     }
-    // --- WAKAS NG BLOCK ---
 
-    // I-redraw ang Lucide icons sa slider buttons
     if (typeof lucide !== 'undefined' && lucide.createIcons) {
         lucide.createIcons();
     }
@@ -1257,17 +1178,12 @@ videos.forEach(video => {
         const source = document.createElement('source');
         source.src = dataSrc.getAttribute('src');
         source.type = dataSrc.getAttribute('type') || 'video/mp4';
-        
-        // Tanggalin ang data-src at idagdag ang tunay na source
         video.removeChild(dataSrc);
         video.appendChild(source);
-        video.load(); // I-load ang video
+        video.load();
     }
 });
 }
-
-
-
 
 
 
@@ -1287,18 +1203,6 @@ videos.forEach(video => {
 // }
 
 // verifyScriptHost();
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

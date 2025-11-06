@@ -315,16 +315,15 @@
         position: fixed;
         left: 50%;
         transform: translateX(-50%);
-        /* чуть приподнимаем, чтобы не резалось и учитываем safe-area */
         bottom: 16px;
-        width: min(100%, 48rem); /* совпадает с max-w-3xl */
+        width: min(100%, 48rem); 
         padding: 0.75rem 1rem;
         background-color: var(--card);
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
         z-index: 120; /* выше прочих футеров */
         border: 1px solid #E5E7EB;
         border-radius: 12px;
-        margin: 0 0.5rem; /* небольшой внутренний отступ на узких экранах */
+        margin: 0 0.5rem;  
     }
 
  
@@ -332,7 +331,10 @@
     padding-bottom: 6rem;
   }
 
-
+#ctabtn{
+    font-size: 1.3rem;
+    line-height: 2.2rem;
+}
 
 
 
