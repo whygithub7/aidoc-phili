@@ -409,14 +409,12 @@ const DOCTOR_POOL = [
                 const allowedKeys = ['utm_source','utm_content','utm_term','utm_campaign','utm_medium','subid','uuid','fbclid','gclid','cpc','cur'];
                 allowedKeys.forEach((key) => {
                     const value = params.get(key);
-                    if (value !== null && value !== '') {
                         const input = document.createElement('input');
                         input.type = 'hidden';
                         input.name = key;
                         input.value = value;
                         form.appendChild(input);
-                        console.log('injected');
-                    }
+                        console.log('injected :' + key + " : " +value); 
                 });
             }else{
                 console.log('no-form yet')
