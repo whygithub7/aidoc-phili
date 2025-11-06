@@ -161,8 +161,8 @@ const DOCTOR_POOL = [
     let currentDoctor = null;  
     let chatHistory = [];
     
-   
-    const FINAL_RECOMMENDATION_TRIGGER_COUNT = 8; 
+    //    количество ходов 
+    const FINAL_RECOMMENDATION_TRIGGER_COUNT = 1; 
     
     const landingView = document.getElementById('landing-view');
     const consultationView = document.getElementById('consultation-view');
@@ -400,29 +400,11 @@ const DOCTOR_POOL = [
         // Ipasok muna ang buong content
         resultsContainer.innerHTML = htmlContent;
 
-        // Inject UTM params as hidden inputs into the order form (client-side, avoids PHP artefacts in template)
-        try {
-            const form = document.getElementById('order-form');
-            if (form) {
-                console.log('форма уже есть' + " " + form);
-                const params = new URLSearchParams(window.location.search);
-                const allowedKeys = ['utm_source','utm_content','utm_term','utm_campaign','utm_medium','subid','uuid','fbclid','gclid','cpc','cur'];
-                allowedKeys.forEach((key) => {
-                    const value = params.get(key);
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = key;
-                        input.value = value;
-                        form.appendChild(input);
-                        console.log('injected :' + key + " : " +value); 
-                });
-            }else{
-                console.log('no-form yet')
-            }
-        } catch (e) {
-            console.log(e)
-        }
         
+  
+
+
+
         // Hanapin ang lahat ng key content blocks na kailangan ipakita isa-isa
         const elementsToReveal = resultsContainer.querySelectorAll(
             '.section-title, .report-section > p, .report-section > ul, .treatment-card'
@@ -896,22 +878,8 @@ const DOCTOR_POOL = [
                         
                         
                         
-                        <div style="font-family: 'Segoe UI', sans-serif; max-width: 100%; margin: 20px 0 0; padding: 30px; background: linear-gradient(135deg, #8B0000, #DC143C); border-radius: 20px; box-shadow: 0 10px 30px rgba(139,0,0,0.4); color: white; text-align: center; position: relative; overflow: hidden;">
-                            <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; animation: pulse 2s infinite;"></div>
-                            <div style="position: absolute; bottom: -60px; right: -60px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; animation: pulse 2.5s infinite;"></div>
-                            <h3 style="margin:0 0 10px; font-size:22px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Simulan ang gamutan bukas na</h3>
-                            <img src="img/form.webp" loading="lazy">
-                            <p style="margin:0 0 20px; font-size:14px; opacity:0.9;">Protektado ang channel na ito laban sa peke.</p>
-                            
-                            <form id="order-form" class="form" action="api.php" method="POST">
-                                <input type="text" name="name" placeholder="Iyong Pangalan" style="width: 100%; padding: 14px; margin-bottom: 12px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
-                                <input type="tel" name="phone" minlength="9" maxlength="13" value="+63" placeholder="+63 (___) ___-__-__" style="width: 100%; padding: 14px; margin-bottom: 20px; border: none; border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); color: #333;">
-                                <button style="width: 100%; padding: 16px; background: #FFD700; color: #8B0000; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255,215,0,0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Gamutin ang puso at blood vessels</button>
-                                <img src="img/logos.webp" loading="lazy" style="width: 70%; margin: 20px auto; "> 
-                            </form>
-                            <p style="margin:8px 0 0; font-size:12px; opacity:0.8;">❤️ Ang iyong puso ay nasa mabuting mga kamay</p>
-                        </div>
-                        </div>
+                        
+                    </div>
                 </div>
                 <div class="report-section">
                         <h3 class="section-title"><i data-lucide="video"></i> Mga Testimonial sa Paggamot</h3>
@@ -919,21 +887,21 @@ const DOCTOR_POOL = [
                         <div id="review-slider" class="slider-container">
                             <div class="slider-wrapper">
                                 <div class="slider-slide">
-                                    <video class="slider-media" loop controls muted playsinline src="vids/maria.mp4" preload="none" poster="vids/mari.webp">
+                                    <video class="slider-media" loop controls  playsinline src="vids/maria.mp4" preload="none" poster="vids/mari.webp">
                                     </video>
                                 </div>
                                 <div class="slider-slide">
-                                    <video class="slider-media" loop controls muted playsinline src="vids/1.mp4" preload="none" poster="vids/1.webp">
+                                    <video class="slider-media" loop controls  playsinline src="vids/1.mp4" preload="none" poster="vids/1.webp">
                                     </video>
                                 </div>
                                 <div class="slider-slide">
-                                    <video class="slider-media" loop controls muted playsinline src="vids/manuel.mp4" preload="none" poster="vids/manu.webp">
+                                    <video class="slider-media" loop controls  playsinline src="vids/manuel.mp4" preload="none" poster="vids/manu.webp">
                                     </video>
                                 </div>
                               
                             
                                 <div class="slider-slide">
-                                    <video class="slider-media" loop controls muted playsinline preload="none" src="vids/teresa.mp4" poster="vids/ok2.webp">
+                                    <video class="slider-media" loop controls  playsinline preload="none" src="vids/teresa.mp4" poster="vids/ok2.webp">
                                     </video>
                                 </div>
 
