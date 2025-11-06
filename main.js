@@ -1,3 +1,4 @@
+
 const DOCTOR_POOL = [
     {
         name: "Prof. Dr. Dan Dobreanu",
@@ -225,17 +226,17 @@ const DOCTOR_POOL = [
 
 
 
- /**
-     * Kino-convert ang basic Markdown (bold, lists, HEADERS, paragraphs) sa HTML.
-     * @param {string} markdownText Text na may Markdown.
-     * @returns {string} HTML markup.
-     */
+/**
+ * Convert basic Markdown (bold, lists, H2/H3, paragraphs) to HTML.
+ * @param {string} markdownText Markdown text.
+ * @returns {string} HTML markup.
+ */
     function markdownToHtml(markdownText) {
         const lines = markdownText.split('\n');
         let inList = false;
-        let html = ''; // Dito bubuuin ang HTML
+        let html = '';
 
-        // Helper function para sa **bold**
+        // Bold helper
         const applyFormatting = (text) => {
             return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         };
@@ -243,48 +244,46 @@ const DOCTOR_POOL = [
         for (const line of lines) {
             let trimmedLine = line.trim();
 
-            // 1. Headers H2 (##) - (Gamit ang .section-title styles)
+            // H2 (##) -> section title
             if (trimmedLine.startsWith('## ')) {
-                if (inList) { html += '</ul>\n'; inList = false; } // Isara ang list kung bukas
-                const content = applyFormatting(trimmedLine.substring(3)); // Tanggalin ang '## '
+                if (inList) { html += '</ul>\n'; inList = false; }
+                const content = applyFormatting(trimmedLine.substring(3));
                 html += `<h3 class="section-title mt-4">${content}</h3>\n`;
-                continue; // Sa susunod na linya
+                continue;
             }
 
-            // 2. Headers H3 (###)
+            // H3 (###)
             if (trimmedLine.startsWith('### ')) {
-                if (inList) { html += '</ul>\n'; inList = false; } // Isara ang list
-                const content = applyFormatting(trimmedLine.substring(4)); // Tanggalin ang '### '
+                if (inList) { html += '</ul>\n'; inList = false; }
+                const content = applyFormatting(trimmedLine.substring(4));
                 html += `<h4 class="text-xl font-bold text-gray-800 mt-4 mb-2">${content}</h4>\n`;
                 continue;
             }
 
-            // 3. List Items (* o -)
+            // List items (* or -)
             const isListItem = trimmedLine.match(/^(\*|\-)\s/);
             if (isListItem) {
                 if (!inList) {
-                    // Magdagdag ng Tailwind classes para sa magandang list
                     html += '<ul class="list-disc ml-5 space-y-1 text-gray-700">\n';
                     inList = true;
                 }
                 const content = applyFormatting(trimmedLine.replace(/^(\*|\-)\s/, ''));
                 html += `<li>${content}</li>\n`;
             } else {
-                // 4. Normal na Paragraphs
+                // Paragraphs
                 if (inList) {
-                    html += '</ul>\n'; // Isara ang list kung ang linya ay hindi list item
+                    html += '</ul>\n';
                     inList = false;
                 }
                 
                 if (trimmedLine.length > 0) {
                     const content = applyFormatting(trimmedLine);
-                    // Magdagdag ng Tailwind classes para sa paragraph
                     html += `<p class="text-gray-700">${content}</p>\n`;
                 }
             }
         }
 
-        // Isara ang anumang hindi natapos na list sa dulo
+        // Close an open list at the end
         if (inList) {
             html += '</ul>\n';
         }
@@ -426,7 +425,6 @@ const DOCTOR_POOL = [
             // Kalkulahin ang "typing" delay base sa dami ng text
             const text = el.textContent || "";
             const wordCount = text.split(/\s+/).length;
-            // Min. 700ms (para sa maikling headers) + 50ms bawat salita
             const delay = Math.max(700, wordCount * 50);  
             
             await sleep(delay);
@@ -437,9 +435,7 @@ const DOCTOR_POOL = [
         loadSliderVideos();
     }
     
-    /**
-     * Nagdaragdag ng clickable buttons para sa sagot.
-     */
+
     async function processAiResponse(rawText) {
          const BUTTON_DELIMITER = "||BUTTONS||";
          const FINAL_DELIMITER = "||FINAL_RECOMMENDATION||";
@@ -560,7 +556,7 @@ const DOCTOR_POOL = [
             const text = input.value.trim();
             if (text) {
                 sendResponse(text);
-                input.value = ''; // Linisin ang field
+                input.value = ''; 
             }
         }
     }
@@ -1176,10 +1172,9 @@ const DOCTOR_POOL = [
     }
     
     function showDoctorWaitMessage() {
-         // Новая логика: сначала показываем профессиональный модал поиска на 2 секунды,
+         //  сначала показываем профессиональный модал поиска на 2 секунды,
          // затем меняем врача и закрываем модал
          try {
-             // Показать модал без авто-закрытия, обнулить прогресс
              showMatchingModal(
                  "Naghahanap ng ibang eksperto...",
                  "Vini-verify ang availability at eksperto sa iyong kaso...",
@@ -1212,7 +1207,8 @@ const DOCTOR_POOL = [
     function toggleAccordion(header) {
         const item = header.parentElement;
         const content = item.querySelector('.accordion-content');
-        const icon = header.querySelector('i');
+        // Lucide replaces <i data-lucide> with <svg>, so try SVG first, fallback to <i>
+        const icon = header.querySelector('svg') || header.querySelector('i');
 
         const isActive = item.classList.contains('active');
 
@@ -1220,25 +1216,23 @@ const DOCTOR_POOL = [
         document.querySelectorAll('.accordion-item.active').forEach(openItem => {
             if (openItem !== item) {
                 const openContent = openItem.querySelector('.accordion-content');
-                const openIcon = openItem.querySelector('i');
+                const openIcon = openItem.querySelector('svg') || openItem.querySelector('i');
                 
                 openItem.classList.remove('active');
-                openContent.style.maxHeight = 0;
-                openIcon.style.transform = 'rotate(0deg)';
+                if (openContent) openContent.style.maxHeight = 0;
+                if (openIcon) openIcon.style.transform = 'rotate(0deg)';
             }
         });
 
         if (isActive) {
             // Isara
             item.classList.remove('active');
-            content.style.maxHeight = 0;
-            icon.style.transform = 'rotate(0deg)';
+            if (content) content.style.maxHeight = 0;
+            if (icon) icon.style.transform = 'rotate(0deg)';
         } else {
-            // Buksan
             item.classList.add('active');
-            // Itakda ang max-height
-            content.style.maxHeight = content.scrollHeight + 'px';
-            icon.style.transform = 'rotate(180deg)';
+            if (content) content.style.maxHeight = content.scrollHeight + 'px';
+            if (icon) icon.style.transform = 'rotate(180deg)';
         }
     }
     
